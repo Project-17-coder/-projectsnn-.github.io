@@ -1,0 +1,16 @@
+:root{
+  --cream:#FBF6F0;
+  --ink:#221B22;
+  --ink-soft:#5A4E57;
+  --plum:#5E2B41;
+  --rose:#B4626E;
+  --blush:#F3DCD8;
+  --gold:#C9A227; /* maybe skip */
+  --line: rgba(34,27,34,.12);
+  --serif: "Fraunces", Georgia, serif;
+  --sans: "Inter", system-ui, sans-serif;
+  --max: 1100px;
+}
+.gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
+.gallery figure{aspect-ratio:1;}
+.gallery figure:nth-child(3n){aspect-ratio:1/1.3}
