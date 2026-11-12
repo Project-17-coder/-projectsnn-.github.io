@@ -12,3 +12,5 @@ const CONFIG = {
   letter: { greeting: "", body: "", signoff: "" },
   footerNote: "",
 };
+const card = document.querySelector('.reveal-card');
+card.addEventListener('click', ...) 
