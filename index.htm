@@ -83,14 +83,54 @@ a{color:inherit}
 .hero__names .amp{font-style:italic;color:var(--blush);font-size:.62em;opacity:.95}
 .hero__line{margin-top:1.4rem;font-size:clamp(.95rem,2.2vw,1.1rem);letter-spacing:.02em;opacity:.92}
 
+/* ============ COUNTDOWN ============ */
 .countdown{
-  display:inline-flex;align-items:center;gap:.65rem;margin-top:2rem;
-  padding:.6rem 1.15rem;border-radius:999px;
-  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);
-  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  display:flex;
+  gap:.6rem;
+  justify-content:center;
+  flex-wrap:wrap;
+  margin-top:2rem;
 }
-.countdown__num{font-family:var(--serif);font-size:1.15rem;font-weight:400}
-.countdown__label{font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;opacity:.85}
+.cd-unit{
+  min-width:74px;
+  padding:.75rem .6rem;
+  border-radius:16px;
+  background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.25);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  text-align:center;
+  transition:transform .3s ease;
+}
+.cd-unit.tick{transform:scale(1.05)}
+.cd-num{
+  display:block;
+  font-family:var(--serif);
+  font-size:1.5rem;
+  line-height:1;
+  font-weight:400;
+  letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums;
+}
+.cd-lbl{
+  display:block;
+  margin-top:.4rem;
+  font-size:.6rem;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  opacity:.8;
+}
+.countdown__done{
+  margin-top:2rem;
+  font-family:var(--serif);
+  font-size:1.25rem;
+  letter-spacing:-.02em;
+  opacity:.95;
+}
+@media(max-width:520px){
+  .cd-unit{min-width:62px;padding:.65rem .45rem}
+  .cd-num{font-size:1.2rem}
+}
 
 .scroll-cue{
   position:absolute;bottom:1.6rem;left:50%;transform:translateX(-50%);
@@ -235,6 +275,7 @@ a{color:inherit}
   html{scroll-behavior:auto}
   .reveal-on-scroll{opacity:1;transform:none;transition:none}
   .flip__q,.scroll-cue::after{animation:none}
+  .cd-unit{transition:none}
 }
 </style>
 </head>
@@ -255,10 +296,28 @@ a{color:inherit}
       <span id="nameHer"></span>
     </h1>
     <p class="hero__line" id="heroLine"></p>
-    <div class="countdown" aria-live="polite">
-      <span class="countdown__num" id="cdNum">—</span>
-      <span class="countdown__label" id="cdLabel"></span>
+
+    <!-- ===== COUNTDOWN UNDER "WE'RE GOING TO BE PARENTS." ===== -->
+    <div class="countdown" id="countdown" aria-live="polite">
+      <div class="cd-unit">
+        <span class="cd-num" id="cd-d">—</span>
+        <span class="cd-lbl">Days</span>
+      </div>
+      <div class="cd-unit">
+        <span class="cd-num" id="cd-h">—</span>
+        <span class="cd-lbl">Hours</span>
+      </div>
+      <div class="cd-unit">
+        <span class="cd-num" id="cd-m">—</span>
+        <span class="cd-lbl">Minutes</span>
+      </div>
+      <div class="cd-unit">
+        <span class="cd-num" id="cd-s">—</span>
+        <span class="cd-lbl">Seconds</span>
+      </div>
     </div>
+    <p class="countdown__done" id="cd-done" hidden>They're here. 🤍</p>
+    <!-- ===== /COUNTDOWN ===== -->
   </div>
 
   <a class="scroll-cue" href="#reveal" aria-label="Scroll down"></a>
@@ -343,13 +402,16 @@ const CONFIG = {
     line: "We're going to be parents."
   },
 
-  dueDate: "2027-07",                // ← YYYY-MM-DD
+  /* ⚠ Countdown date.
+     You can use "2027-07-15" for a precise day,
+     or leave "2027-07" and it will count to 1 July 2027. */
+  dueDate: "2027-07",
 
   reveal: {
     label: "It's a",
     answer: "surprise",                 // "girl" | "boy" | "surprise"
     note: "A little angel Already so loved.",
-    unlockDate: "2026-12-26",                    // e.g. "2026-12-26" to lock until the day
+    unlockDate: "2026-12-26",           // e.g. "2026-12-26" to lock until the day
   },
 
   story: [
@@ -415,7 +477,84 @@ const CONFIG = {
     heroImg.style.display = 'none';
   }
 
- 
+  /* ---------- COUNTDOWN ----------
+     Sits directly under "We're going to be parents."
+     Reads CONFIG.dueDate. Accepts YYYY-MM-DD or YYYY-MM. */
+  (function countdown() {
+    let raw = String(CONFIG.dueDate || "").trim();
+
+    // "2027-07"  →  treat as the 1st of that month
+    if (/^\d{4}-\d{2}$/.test(raw)) raw += "-01";
+
+    // Add local midnight if no time was given
+    const iso = raw.indexOf("T") === -1 ? raw + "T00:00:00" : raw;
+    const target = new Date(iso).getTime();
+
+    const box  = document.getElementById("countdown");
+    const done = document.getElementById("cd-done");
+    const dEl  = document.getElementById("cd-d");
+    const hEl  = document.getElementById("cd-h");
+    const mEl  = document.getElementById("cd-m");
+    const sEl  = document.getElementById("cd-s");
+
+    if (!box || !dEl) return;
+
+    if (isNaN(target)) {
+      console.warn("[countdown] Invalid CONFIG.dueDate:", CONFIG.dueDate);
+      box.hidden = true;
+      return;
+    }
+
+    const pad = (n) => String(n).padStart(2, "0");
+    let lastSec = -1;
+    let timer = null;
+
+    function showDone() {
+      if (timer) { clearInterval(timer); timer = null; }
+      box.hidden = true;
+      if (done) done.hidden = false;
+    }
+
+    function tick() {
+      const diff = target - Date.now();
+
+      if (diff <= 0) { showDone(); return; }
+
+      const days = Math.floor(diff / 86400000);
+      const hrs  = Math.floor(diff / 3600000) % 24;
+      const mins = Math.floor(diff / 60000) % 60;
+      const secs = Math.floor(diff / 1000) % 60;
+
+      dEl.textContent = days;
+      hEl.textContent = pad(hrs);
+      mEl.textContent = pad(mins);
+      sEl.textContent = pad(secs);
+
+      // gentle pulse on the seconds tile each time it changes
+      if (secs !== lastSec) {
+        lastSec = secs;
+        const tile = sEl.closest(".cd-unit");
+        if (tile) {
+          tile.classList.add("tick");
+          setTimeout(() => tile.classList.remove("tick"), 160);
+        }
+      }
+    }
+
+    tick();
+    timer = setInterval(tick, 1000);
+
+    // pause while the tab is hidden; refresh instantly on return
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        if (timer) { clearInterval(timer); timer = null; }
+      } else {
+        tick();
+        if (!timer) timer = setInterval(tick, 1000);
+      }
+    });
+  })();
+
   /* ---------- REVEAL CARD ---------- */
   const flip = $('#flip');
   const ANSWERS = {
