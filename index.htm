@@ -382,7 +382,7 @@ a{color:inherit}
 <!-- ══════════════ FOOTER ══════════════ -->
 <footer class="footer">
   <div class="wrap">
-    <a href="LittleNana.html" class="btn"> Kiddo's journey</a>
+    <a href="LittleNana.html" class="btn" id="lockedBtn"> Kiddo's journey</a>
     <span class="mark" aria-hidden="true">♥</span>
     <p id="footerNote"></p>
   </div>
@@ -698,6 +698,41 @@ const CONFIG = {
 .btn:hover::after{transform:translateX(4px)}
 .btn:active{transform:translateY(0)}
 .btn:focus-visible{outline:2px solid #B4636F;outline-offset:3px}
+    .toast{
+  position:fixed;left:50%;bottom:2rem;transform:translate(-50%,20px);
+  background:#5E2B41;color:#FBF6F0;
+  font-family:"Inter",system-ui,sans-serif;font-size:.85rem;letter-spacing:.02em;
+  padding:.9rem 1.4rem;border-radius:14px;
+  box-shadow:0 20px 40px -20px rgba(36,28,36,.6);
+  opacity:0;pointer-events:none;z-index:10000;
+  transition:opacity .4s ease,transform .4s ease;
+}
+.toast.show{opacity:1;transform:translate(-50%,0)}
   </style>
+
+  <script>
+    
+(function () {
+  const UNLOCK_DATE = "2027-07-01T00:00:00"; // ← change this
+  const btn = document.getElementById("lockedBtn");
+  const toast = document.getElementById("toast");
+  let toastTimer;
+
+  btn.addEventListener("click", function (e) {
+    const unlock = new Date(UNLOCK_DATE);
+    if (isNaN(unlock)) return; // bad date → let link work
+    if (Date.now() < unlock.getTime()) {
+      e.preventDefault();
+      const days = Math.ceil((unlock - Date.now()) / 86400000);
+      toast.textContent = "No please be patient. " + days + " more day" + (days === 1 ? "" : "s") + " to go";
+      toast.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove("show"), 3200);
+    }
+    // else: do nothing → normal navigation to page2.html happens
+  });
+})();
+
+  </script>
 </body>
 </html>
