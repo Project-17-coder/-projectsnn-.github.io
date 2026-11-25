@@ -389,12 +389,10 @@ a{color:inherit}
 </footer>
 
 <script>
-/* ══════════════════════════════════════════════════════════════
-   ①  YOUR CONTENT — edit this block only
-   ══════════════════════════════════════════════════════════════ */
+/* Content*/
 const CONFIG = {
 
-  names: { you: "The S", her: "N Family" },
+  names: { you: " S", her: "N Family" },
 
   hero: {
     photo: "photos/hero.jpg",           // ← your gender-reveal photo
@@ -688,6 +686,7 @@ const CONFIG = {
   padding:.85rem 1.6rem;border-radius:999px;
   border:1px solid rgba(94,43,65,.28);
   transition:background .35s ease,color .35s ease,transform .35s ease,box-shadow .35s ease;
+      cursor:pointer;
 }
 .btn::after{content:"→";transition:transform .35s ease}
 .btn:hover{
@@ -698,7 +697,9 @@ const CONFIG = {
 .btn:hover::after{transform:translateX(4px)}
 .btn:active{transform:translateY(0)}
 .btn:focus-visible{outline:2px solid #B4636F;outline-offset:3px}
-    .toast{
+
+    
+    #locktoast{
   position:fixed;left:50%;bottom:2rem;transform:translate(-50%,20px);
   background:#5E2B41;color:#FBF6F0;
   font-family:"Inter",system-ui,sans-serif;font-size:.85rem;letter-spacing:.02em;
@@ -706,10 +707,12 @@ const CONFIG = {
   box-shadow:0 20px 40px -20px rgba(36,28,36,.6);
   opacity:0;pointer-events:none;z-index:10000;
   transition:opacity .4s ease,transform .4s ease;
+   white-space:nowrap;   
 }
-.toast.show{opacity:1;transform:translate(-50%,0)}
+#locktoast.show{opacity:1;transform:translate(-50%,0)}
+    
   </style>
-
+<div id="LockToast" role="status" aria-live="polite"></div>
   <script>
     
 (function () {
